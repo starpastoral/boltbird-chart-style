@@ -1,0 +1,4 @@
+interface:
+  display_name: "Boltbird Chart Style"
+  short_description: "Standardize Boltbird chart visuals."
+  default_prompt: "Use $boltbird-chart-style to choose the right chart form if needed, then render or restyle the chart with the Boltbird house system. Default to consulting_safe unless the user explicitly asks for editorial. If both SVG and PNG exist, present the PNG to the user as the preview and mention the SVG as the editable source."

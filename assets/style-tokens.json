@@ -1,0 +1,254 @@
+{
+  "name": "Boltbird Chart Style",
+  "version": "1.0.0",
+  "profiles": {
+    "default_mode": "consulting_safe",
+    "available_modes": [
+      "consulting_safe",
+      "editorial"
+    ],
+    "consulting_safe": {
+      "prefer_chart_form_change": true,
+      "pie_max_slices_before_bar": 6,
+      "pie_external_labels_required_at": 5,
+      "line_external_labels_required_at": 4
+    },
+    "editorial": {
+      "prefer_chart_form_change": false,
+      "pie_max_slices_before_bar": 10,
+      "pie_external_labels_required_at": 6,
+      "line_external_labels_required_at": 5
+    }
+  },
+  "export": {
+    "background": "transparent",
+    "composite_target": "light_or_dark_unknown",
+    "invert_for_light_surface": false,
+    "contrast_strategy": "mid_gray_neutral",
+    "source_of_truth": "tokens_canonical",
+    "canonical_format": "svg",
+    "delivery_format": "png",
+    "prefer_preview_png": true,
+    "png_scale": 2,
+    "preview_export_script": "./scripts/export_preview_png.py"
+  },
+  "typography": {
+    "primary_font_family": "Geist",
+    "monospace_font_family": "Google Sans Code",
+    "fallback_font_stacks": {
+      "primary": "'Geist','Helvetica Neue',Arial,sans-serif",
+      "monospace": "'Google Sans Code','SFMono-Regular',Menlo,monospace",
+      "wordmark": "'Source Serif 4','Times New Roman',serif"
+    },
+    "title": {
+      "font_family": "Geist",
+      "font_weight": 600,
+      "font_size_px": 38,
+      "letter_spacing_em": -0.01
+    },
+    "subtitle": {
+      "font_family": "Geist",
+      "font_weight": 500,
+      "font_size_px": 20
+    },
+    "meta": {
+      "font_family": "Geist",
+      "font_weight": 500,
+      "font_size_px": 16
+    },
+    "axis": {
+      "font_family": "Geist",
+      "font_weight": 500,
+      "font_size_px": 17
+    },
+    "tick": {
+      "font_family": "Geist",
+      "font_weight": 500,
+      "font_size_px": 15
+    },
+    "numeric_tag": {
+      "font_family": "Google Sans Code",
+      "font_weight": 500,
+      "font_size_px": 14
+    }
+  },
+  "palette": {
+    "mode": "single_accent_first",
+    "ink_strong": "rgba(150, 156, 168, 0.96)",
+    "ink_base": "rgba(132, 139, 151, 0.92)",
+    "ink_soft": "rgba(112, 120, 132, 0.88)",
+    "ink_faint": "rgba(92, 100, 112, 0.82)",
+    "grid_major": "rgba(100, 108, 120, 0.26)",
+    "grid_minor": "rgba(100, 108, 120, 0.14)",
+    "primary_accent": "#34605F",
+    "accent_cool": "#34605F",
+    "accent_warm": "#D6A15D",
+    "reserve_accents": [
+      "#7C86B6",
+      "#D6A15D",
+      "#947BA8"
+    ],
+    "neutral_series": [
+      "#6F7C8C",
+      "#9AA4AF",
+      "#BEC6CE"
+    ],
+    "quartet": [
+      "#34605F",
+      "#7C86B6",
+      "#D6A15D",
+      "#947BA8"
+    ],
+    "series_distinct": [
+      "#34605F",
+      "#7C86B6",
+      "#D6A15D",
+      "#947BA8"
+    ],
+    "role_policies": {
+      "line": "single_accent_first",
+      "area": "single_accent_first",
+      "bar": "accent_plus_neutrals",
+      "column": "accent_plus_neutrals",
+      "grouped_bar": "single_accent_first",
+      "stacked_bar": "single_accent_first",
+      "scatter": "accent_plus_neutrals",
+      "bubble": "accent_plus_neutrals",
+      "histogram": "neutral_with_single_accent_reference",
+      "box": "neutral_family_with_accent_median",
+      "heatmap": "monochrome_sequential",
+      "pie": "single_hue_with_structural_labels",
+      "donut": "single_hue_with_structural_labels"
+    },
+    "overflow_strategy": "highlight_plus_muted",
+    "max_hue_families": 4
+  },
+  "layout": {
+    "canvas": {
+      "width_px": 1600,
+      "height_px": 900
+    },
+    "padding_px": {
+      "top": 56,
+      "right": 104,
+      "bottom": 96,
+      "left": 104
+    },
+    "metadata_band_height_px": 186,
+    "title_alignment": "center",
+    "legend_alignment": "center",
+    "source_alignment": "left",
+    "legend_inline_threshold": 3,
+    "legend_vertical_x_px": 1452,
+    "legend_vertical_anchor": "plot_top",
+    "legend_vertical_top_px": 182,
+    "legend_vertical_top_offset_px": 16,
+    "right_sidebar_width_px": 180,
+    "x_tick_label_y_px": 18,
+    "y_axis_title_x_px": 34,
+    "latest_label_gap_px": 14,
+    "latest_label_line_dx_px": 24,
+    "latest_label_strategy": "inside_dynamic",
+    "latest_label_vertical_offset_px": -8,
+    "latest_label_line_min_length_px": 44,
+    "latest_label_single_use_line": false
+  },
+  "metadata": {
+    "title_y_px": 86,
+    "subtitle_y_px": 124,
+    "source_y_px": 150,
+    "legend_gap_y_px": 32,
+    "summary_anchor": "right"
+  },
+  "legend": {
+    "sample_length_px": 30,
+    "label_gap_px": 12,
+    "item_gap_px": 36,
+    "row_gap_px": 28,
+    "text_baseline_shift_px": 6,
+    "sample_stroke_width_px": 3.2,
+    "inline_center_nudge_px": 0,
+    "outside_gap_px": 22
+  },
+  "watermark": {
+    "text": "Powered by Boltbird",
+    "prefix_text": "Powered by",
+    "wordmark_text": "Boltbird",
+    "icon_asset": "./boltbird-mark.svg",
+    "lockup_asset": "./watermark-lockup.svg",
+    "prefix_font_family": "Geist",
+    "wordmark_font_family": "Source Serif 4",
+    "wordmark_font_weight": 700,
+    "placement": "top-right",
+    "opacity": 0.24,
+    "width_px": 268,
+    "margin_top_px": 36,
+    "margin_right_px": 40,
+    "prefix_font_size_px": 34,
+    "wordmark_font_size_px": 40,
+    "prefix_offset_x_px": 0,
+    "wordmark_offset_x_px": 200,
+    "baseline_y_px": 100,
+    "icon_scale": 0.230,
+    "icon_offset_x_px": 360,
+    "icon_offset_y_px": 52,
+    "anchor_mode": "icon_right_edge",
+    "icon_right_edge_px": 418,
+    "avoid_overlap_with": [
+      "title",
+      "subtitle",
+      "legend",
+      "annotations",
+      "axis_labels"
+    ],
+    "colored_emoji_allowed": false
+  },
+  "chart_recipes": {
+    "candlestick": {
+      "up_body_color": "ink_base",
+      "down_body_color": "ink_faint",
+      "wick_up_color": "ink_soft",
+      "wick_down_color": "ink_faint",
+      "wick_width_px": 1.7,
+      "up_body_stroke_width_px": 1.8,
+      "down_body_stroke_width_px": 1.1,
+      "body_width_ratio": 0.58,
+      "body_width_min_px": 4.0,
+      "body_width_max_px": 10.0,
+      "corner_radius_px": 1.3,
+      "wick_color": "ink_soft",
+      "event_markers": [
+        "circle",
+        "square",
+        "triangle"
+      ]
+    },
+    "line": {
+      "focus_series_weight_px": 3.2,
+      "support_series_weight_px": 3.0,
+      "latest_marker_radius_px": 4.4,
+      "obstacle_segment_window": 24,
+      "obstacle_stroke_pad_px": 10,
+      "multi_series_external_labels": true,
+      "external_label_min_separation_px": 24,
+      "external_label_gutter_gap_px": 18,
+      "external_label_leader_length_px": 18
+    },
+    "area": {
+      "fill_opacity_min": 0.1,
+      "fill_opacity_max": 0.16
+    },
+    "pie": {
+      "high_slice_external_labels": true,
+      "donut_inner_ratio": 0.46,
+      "separator_stroke": "rgba(245,245,245,0.75)",
+      "separator_width_px": 1.4,
+      "leader_stroke_width_px": 1.1,
+      "label_font_size_px": 14,
+      "label_min_separation_px": 22,
+      "label_column_gap_px": 34,
+      "label_stub_px": 18,
+      "badge_radius_px": 11
+    }
+  }
+}
