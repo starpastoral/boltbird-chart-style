@@ -4,6 +4,7 @@ Apply the global style spec first, then use the rules below for the requested ch
 
 ## Candlestick / K-Line
 
+- Canonical entry path is [`../examples/candlestick_canonical_svg.py`](../examples/candlestick_canonical_svg.py), followed by [`../scripts/chart_qa.py`](../scripts/chart_qa.py). Do not improvise a fresh candlestick geometry path when the shared one can be extended.
 - Use wick strokes in the same neutral family as the candle body.
 - Default body convention:
   - Up candle: hollow body with neutral outline
@@ -20,6 +21,11 @@ Apply the global style spec first, then use the rules below for the requested ch
 - If three event families are insufficient, use direct text labels instead of adding more colors.
 - Reserve extra headroom above the price range for event labels so they do not collide with the watermark band.
 - If volume is shown, place it in a subdued lower strip using the same neutral ladder at lower opacity.
+- Treat these as hard QA gates, not taste notes:
+  - candle body gap must stay above the token minimum
+  - y-axis labels must remain visually attached to the axis
+  - latest-price label must clear the recent candle obstacle field
+  - watermark must stay out of the plot safe zone
 
 ## Line
 

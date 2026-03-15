@@ -15,15 +15,19 @@ Apply one visual system across financial and analytical charts. Preserve the sam
 - The safest generic default is: transparent export, one accent plus neutral ladder, restrained labels, and a top metadata band.
 - Tokens are the shipped source of truth. If prose ranges differ from concrete token values, follow the tokens.
 - This skill is SVG-first, but the tokens and decision rules are portable to other chart stacks.
+- Font handling is part of the runtime contract. Do not assume a host renderer can discover `Geist`, `Google Sans Code`, or `Source Serif 4` just because they exist on the machine.
+- Default chart copy language is English. Unless the user explicitly asks for another language, titles, subtitles, source lines, watermark text, axis labels, legend labels, and annotations must stay English-only to reduce font fallback risk.
 
 ## Workflow
 
 1. Read [`references/style-spec.md`](references/style-spec.md) before making or revising any chart.
 2. Read [`references/chart-recipes.md`](references/chart-recipes.md) only for the chart types in scope.
 3. Start from [`assets/style-tokens.json`](assets/style-tokens.json) when the target stack supports config objects, design tokens, or theme files.
-4. Use transparent export by default. Assume the chart may be placed on either a light or dark surface, so use the default mid-gray neutral ink system instead of maintaining separate light-only and dark-only variants.
-5. Use the watermark lockup from [`assets/watermark-lockup.svg`](assets/watermark-lockup.svg) or reconstruct the same lockup with the bird mark from [`assets/boltbird-mark.svg`](assets/boltbird-mark.svg). Never use a colored emoji glyph.
-6. Use `profiles.default_mode` unless the user explicitly asks for another mode. The default mode is `consulting_safe`; supported explicit modes are `consulting_safe` and `editorial`.
+4. Resolve fonts through the shared runtime before emitting text. For SVG output, embed resolved font files into the SVG style block when possible instead of trusting system lookup.
+5. Use transparent export by default. Assume the chart may be placed on either a light or dark surface, so use the default mid-gray neutral ink system instead of maintaining separate light-only and dark-only variants.
+6. Use the watermark as one SVG lockup asset from [`assets/watermark-lockup.svg`](assets/watermark-lockup.svg). Do not reconstruct it from live text unless you are regenerating the asset itself. Never use a colored emoji glyph.
+7. Use `profiles.default_mode` unless the user explicitly asks for another mode. The default mode is `consulting_safe`; supported explicit modes are `consulting_safe` and `editorial`.
+8. For candlestick tasks, use the canonical starter and run chart QA before delivery. If there is no fitting canonical pipeline, extend the skill first instead of improvising ad-hoc geometry.
 
 ## Quick Invocation
 
@@ -44,6 +48,7 @@ import sys
 SKILL_DIR = Path("/path/to/boltbird-chart-style")
 sys.path.insert(0, str(SKILL_DIR / "scripts"))
 
+from font_runtime import build_svg_style_block
 from runtime import chart_plan, load_runtime, series_palette
 from svg_chrome import render_metadata_block, render_legend, render_watermark
 from label_placement import choose_latest_label_placement, polyline_obstacles, stack_external_labels
@@ -53,6 +58,7 @@ tokens = rt["tokens"]
 mode = rt["mode"]
 plan = chart_plan(chart_kind="line", series_count=4, tokens=tokens, requested_mode=mode)
 colors = series_palette(chart_kind=plan["resolved_form"], count=4, tokens=tokens, requested_mode=mode)
+style_block = build_svg_style_block(rt["font_plan"])
 ```
 
 Use `chart_plan(...)` before drawing when chart form may need to change under `consulting_safe`.
@@ -72,6 +78,10 @@ Everything else should come from the tokens and shared helpers unless the user e
 ## Shared Entry Points
 
 - Runtime facade: [`scripts/runtime.py`](scripts/runtime.py)
+- Font resolution and SVG style emission: [`scripts/font_runtime.py`](scripts/font_runtime.py)
+- Matplotlib geometry-only bridge: [`scripts/matplotlib_bridge.py`](scripts/matplotlib_bridge.py)
+- Candlestick geometry helper: [`scripts/candlestick_runtime.py`](scripts/candlestick_runtime.py)
+- QA metadata and checks: [`scripts/qa_runtime.py`](scripts/qa_runtime.py), [`scripts/chart_qa.py`](scripts/chart_qa.py)
 - Label placement: [`scripts/label_placement.py`](scripts/label_placement.py)
 - SVG metadata, legend, and watermark helpers: [`scripts/svg_chrome.py`](scripts/svg_chrome.py)
 - Palette and mode logic: [`scripts/palette_system.py`](scripts/palette_system.py)
@@ -80,6 +90,11 @@ Everything else should come from the tokens and shared helpers unless the user e
 
 - Use `Geist` for titles, axes, legends, notes, and annotations.
 - Use `Google Sans Code` only for dense numeric tags, compact tabular values, or code-like identifiers.
+- Do not treat silent font fallback as acceptable. If required fonts are unresolved, either embed them from resolved files or state that the chart is running in fallback mode.
+- If Matplotlib is used, keep it geometry-only. Titles, legends, watermark, and final text treatment belong in the SVG compose layer, not in `matplotlib`.
+- Do not ship the first candlestick draft without QA. Run `python3 scripts/chart_qa.py path/to/chart.svg` and fail the task if it reports body merging, axis drift, label collision, or watermark intrusion.
+- Do not bypass the runtime contract with one-off geometry math unless you are extending the shared candlestick pipeline itself.
+- Source text and watermark belong to the metadata footer row. They are peers of the chart chrome, not floating overlays inside the plot body.
 - Keep the background transparent unless the user explicitly asks for an opaque panel.
 - Default to one accent plus a neutral ladder. If extra semantic separation is required, keep the total hue families restrained and only expand beyond one hue when the recipe requires it.
 - Keep the chart data visually primary. Decorative elements, legend chrome, and watermarking must stay subordinate.
@@ -100,6 +115,8 @@ Everything else should come from the tokens and shared helpers unless the user e
 - When generating charts, default deliverables are:
   - primary: `.svg`
   - preview: `.png` (same basename)
+- Before rendering text-heavy charts, run `python3 scripts/check_fonts.py` or inspect `rt["font_plan"]` so font failures are explicit.
+- For candlestick charts, run the canonical path in [`examples/candlestick_canonical_svg.py`](examples/candlestick_canonical_svg.py) or an equivalent pipeline built on the shared helpers, then run `python3 scripts/chart_qa.py output.svg`.
 - After writing SVG, export PNG if tooling exists:
   - prefer: `rsvg-convert -w 1600 -h 900 input.svg -o output.png`
   - fallback: `magick input.svg -resize 1600x900 output.png`
@@ -120,7 +137,10 @@ Everything else should come from the tokens and shared helpers unless the user e
 - Chart-specific rules: [`references/chart-recipes.md`](references/chart-recipes.md)
 - Reusable tokens: [`assets/style-tokens.json`](assets/style-tokens.json)
 - Runtime facade for other agents: [`scripts/runtime.py`](scripts/runtime.py)
+- Optional Matplotlib bridge: [`scripts/matplotlib_bridge.py`](scripts/matplotlib_bridge.py)
 - Runnable starter example: [`examples/minimal_svg_chart.py`](examples/minimal_svg_chart.py)
+- Matplotlib post-compose example: [`examples/matplotlib_postcompose_chart.py`](examples/matplotlib_postcompose_chart.py)
+- Canonical candlestick starter: [`examples/candlestick_canonical_svg.py`](examples/candlestick_canonical_svg.py)
 - Monochrome bird mark: [`assets/boltbird-mark.svg`](assets/boltbird-mark.svg)
 - Watermark lockup: [`assets/watermark-lockup.svg`](assets/watermark-lockup.svg)
 - Generic latest-label placement helper: [`scripts/label_placement.py`](scripts/label_placement.py)

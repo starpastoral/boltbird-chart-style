@@ -48,6 +48,16 @@ def rect_from_segment(x0: float, y0: float, x1: float, y1: float, pad: float) ->
     return Rect(min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1)).expanded(pad)
 
 
+def line_endpoint_for_box(box: Rect, *, point_x: float, point_y: float, inset: float = 6.0) -> tuple[float, float]:
+    if point_y >= box.y1:
+        return (min(max(point_x, box.x0 + inset), box.x1 - inset), box.y1)
+    if point_y <= box.y0:
+        return (min(max(point_x, box.x0 + inset), box.x1 - inset), box.y0)
+    if point_x >= box.x1:
+        return (box.x1, min(max(point_y, box.y0 + inset), box.y1 - inset))
+    return (box.x0, min(max(point_y, box.y0 + inset), box.y1 - inset))
+
+
 def polyline_obstacles(
     points: list[tuple[float, float]],
     *,
@@ -144,8 +154,7 @@ def choose_latest_label_placement(
 
         if best_penalty is None or penalty < best_penalty:
             best_penalty = penalty
-            line_end_x = box.x1 + 6 if anchor == "end" else box.x0 - 6
-            line_end_y = text_y - 6
+            line_end_x, line_end_y = line_endpoint_for_box(box, point_x=point_x, point_y=point_y)
             line_length = abs(line_end_x - point_x) + abs(line_end_y - point_y)
             use_line = ((not box.contains_point(point_x, point_y, pad=8)) and line_length >= min_line_length_px) or (
                 single_label_use_line and line_length >= min_line_length_px

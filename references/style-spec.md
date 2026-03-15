@@ -24,13 +24,15 @@ If the user does not ask for a specific mode, default to `consulting_safe`.
 - Primary font: `Geist`
 - Monospace font: `Google Sans Code`
 - Wordmark font: `Source Serif 4`
+- Default chart copy language: English
 - Do not mix additional display fonts.
 - Use semibold titles and medium-weight support text. Avoid black or ultra-heavy weights.
+- Unless the user explicitly requests another language, keep all chart text in English to avoid renderer fallback and mixed-script typography drift.
 
 Fallback stacks:
 
 - primary: `Geist`, `Helvetica Neue`, `Arial`, `sans-serif`
-- monospace: `Google Sans Code`, `SFMono-Regular`, `Menlo`, `monospace`
+- monospace: `Google Sans Code`, `Geist Mono`, `SFMono-Regular`, `Menlo`, `monospace`
 - wordmark: `Source Serif 4`, `Times New Roman`, `serif`
 
 Recommended 1600x900 sizing:
@@ -87,6 +89,17 @@ Default role mapping by chart family:
 - First-class implementation target: SVG-first workflows.
 - Portable layer: tokens, chart-form decisions, color-role logic, metadata layout, and label-placement rules.
 - For Matplotlib, Plotly, Vega-Lite, ECharts, or similar stacks, translate the same token values and role rules instead of copying SVG helpers directly.
+- Matplotlib is acceptable for geometry generation, but it is not the canonical text or watermark renderer for this skill. Final typography and lockup treatment should be emitted in SVG or another renderer with explicit font control.
+
+## Rendering Contract
+
+- Fonts are runtime dependencies, not decorative suggestions.
+- Do not assume `Geist`, `Google Sans Code`, or `Source Serif 4` are discoverable just because they are installed on the host.
+- For SVG delivery, prefer embedding resolved font files in the SVG style block so PNG export backends do not silently substitute system fonts.
+- If a required font cannot be resolved, surface that fact explicitly and treat the output as fallback mode rather than silently calling it on-style.
+- If a non-SVG stack is forced, validate font registration before rendering and fail loudly instead of accepting a renderer-selected substitute.
+- If Matplotlib is used, export a plot-only layer and compose it under SVG chrome instead of letting Matplotlib own title, legend, or watermark layout.
+- For candlesticks, a draft is not complete until the shared QA pass succeeds. Repeated failures in candle separation, axis attachment, latest-label clearance, or watermark safe-zone handling should be treated as pipeline bugs, not taste debates.
 
 ## Background and Surface
 
@@ -107,6 +120,7 @@ Recommended 1600x900 layout:
 - Plot area begins below the metadata band
 - Title block: centered horizontally
 - Source line: left-aligned under title block or under the legend, never floating inside the plot
+- Source line and watermark share the metadata footer row and should read as one chrome layer, not as two independent floating objects
 - Legend: single row under title block when needed
 - Legend rule:
   - 1 to 3 items: center it under the subtitle in one horizontal row
@@ -153,7 +167,7 @@ Do not over-pack the top band. If title, subtitle, source, and legend exceed the
 
 ## Watermark
 
-Use the lockup text `Powered by Boltbird` with the bird icon rendered in a single color. Do not use a full-color emoji. The supplied [`../assets/watermark-lockup.svg`](../assets/watermark-lockup.svg) is the reference lockup.
+Use the lockup text `Powered by Boltbird` with the bird icon rendered in a single color. Do not use a full-color emoji. The supplied [`../assets/watermark-lockup.svg`](../assets/watermark-lockup.svg) is the canonical lockup asset and should be placed as one SVG object.
 
 Typography rules for the lockup:
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from font_runtime import resolve_font_plan
 from palette_system import (
     mode_policy,
     recommended_chart_form,
@@ -11,7 +12,7 @@ from palette_system import (
     resolve_series_palette,
     single_hue_ladder,
 )
-from svg_chrome import load_single_path_d
+from svg_chrome import load_single_path_d, load_svg_asset
 
 
 def skill_dir_from(current_file: str | Path) -> Path:
@@ -28,14 +29,17 @@ def load_runtime(skill_dir: str | Path, requested_mode: str | None = None) -> di
     tokens = load_tokens(skill_path)
     mode = resolve_mode(tokens, requested_mode)
     watermark = tokens.get("watermark", {})
+    font_plan = resolve_font_plan(skill_path, tokens)
     return {
         "skill_dir": skill_path,
         "tokens": tokens,
         "mode": mode,
         "policy": mode_policy(tokens, mode),
+        "font_plan": font_plan,
         "watermark_tokens": watermark,
         "watermark_icon_asset": skill_path / "assets" / Path(watermark.get("icon_asset", "./boltbird-mark.svg")).name,
         "watermark_lockup_asset": skill_path / "assets" / Path(watermark.get("lockup_asset", "./watermark-lockup.svg")).name,
+        "watermark_lockup_svg": load_svg_asset(skill_path / "assets" / Path(watermark.get("lockup_asset", "./watermark-lockup.svg")).name),
         "watermark_icon_path": load_single_path_d(skill_path / "assets" / "boltbird-mark.svg"),
     }
 
@@ -92,6 +96,7 @@ __all__ = [
     "recommended_chart_form",
     "recommended_color_strategy",
     "resolve_mode",
+    "resolve_font_plan",
     "resolve_series_palette",
     "series_palette",
     "single_hue_ladder",

@@ -11,8 +11,9 @@ from pathlib import Path
 SKILL_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SKILL_DIR / "scripts"))
 
+from font_runtime import build_svg_style_block, font_report_lines
 from runtime import chart_plan, load_runtime, series_palette
-from svg_chrome import draw_text, render_metadata_block, render_watermark
+from svg_chrome import draw_text, render_metadata_block, render_metadata_footer_row, render_watermark
 
 
 WIDTH = 1600
@@ -48,6 +49,8 @@ def main() -> None:
     palette = tokens["palette"]
     layout = tokens["layout"]
     metadata = tokens["metadata"]
+    footer_baseline_y = metadata["footer_baseline_y_px"]
+    footer_rule_y = metadata["footer_rule_y_px"]
 
     data = [
         ("Category A", 34.0),
@@ -97,11 +100,7 @@ def main() -> None:
         f'viewBox="0 0 {WIDTH} {HEIGHT}" fill="none">'
     )
     svg.append(
-        "<style>"
-        ".geist{font-family:'Geist','Helvetica Neue',Arial,sans-serif;}"
-        ".gscode{font-family:'Google Sans Code','SFMono-Regular',Menlo,monospace;}"
-        ".serifword{font-family:'Source Serif 4','Times New Roman',serif;}"
-        "</style>"
+        build_svg_style_block(rt["font_plan"])
     )
     svg.extend(
         render_metadata_block(
@@ -110,13 +109,31 @@ def main() -> None:
             plot_x1=plot_x1,
             title="Minimal Boltbird SVG Example",
             subtitle=f"Default mode: {mode} | Resolved form: {plan['resolved_form']}",
-            source="Source: synthetic demo data",
+            source="",
             title_fill=ink_strong,
             body_fill=ink_soft,
             title_size=38,
             subtitle_size=20,
             meta_size=16,
             metadata_tokens=metadata,
+        )
+    )
+    svg.extend(
+        render_metadata_footer_row(
+            plot_x0=left,
+            plot_x1=plot_x1,
+            baseline_y=footer_baseline_y,
+            rule_y=None,
+            source="Source: synthetic demo data",
+            source_fill=ink_soft,
+            source_size=16,
+            watermark_parts=render_watermark(
+                right_edge=plot_x1,
+                baseline_y=footer_baseline_y,
+                watermark_tokens=rt["watermark_tokens"],
+                fill=ink_base,
+                watermark_asset=rt["watermark_lockup_svg"],
+            ),
         )
     )
 
@@ -147,20 +164,13 @@ def main() -> None:
         svg.append(draw_text(plot_x0 + bar_w + 12, y + 23, f"{value:.1f}%", klass="gscode", size=16, weight=500, fill=ink_base))
 
     svg.append(draw_text(plot_x0, plot_y0 - 18, "Share", klass="geist", size=15, weight=500, fill=ink_soft))
-    svg.extend(
-        render_watermark(
-            width=WIDTH,
-            top=top,
-            watermark_tokens=rt["watermark_tokens"],
-            fill=ink_base,
-            icon_path=rt["watermark_icon_path"],
-        )
-    )
     svg.append("</svg>")
 
     out_path = Path(args.output)
     out_path.write_text("".join(svg), encoding="utf-8")
     print(out_path)
+    for line in font_report_lines(rt["font_plan"]):
+        print(line, file=sys.stderr)
 
     if not args.no_png:
         export_script = SKILL_DIR / "scripts" / "export_preview_png.py"

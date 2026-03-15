@@ -1,5 +1,8 @@
 .DS_Store
 __pycache__/
 *.pyc
+.runtime/
+.uv-cache/
+.venv/
 examples/*.png
 examples/*.svg

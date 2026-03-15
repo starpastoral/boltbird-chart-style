@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from xml.etree import ElementTree as ET
 
 
 def safe(s: str) -> str:
@@ -24,10 +25,13 @@ def draw_text(
     fill: str,
     anchor: str = "start",
     letter_spacing: float | None = None,
+    font_family: str | None = None,
 ) -> str:
     extra = ""
     if letter_spacing is not None:
         extra += f' letter-spacing="{letter_spacing}"'
+    if font_family is not None:
+        extra += f' font-family="{safe(font_family)}"'
     return (
         f'<text class="{klass}" x="{x:.2f}" y="{y:.2f}" text-anchor="{anchor}" '
         f'font-size="{size}" font-weight="{weight}" fill="{fill}"{extra}>'
@@ -118,6 +122,39 @@ def render_metadata_block(
     return parts
 
 
+def render_metadata_footer_row(
+    *,
+    plot_x0: float,
+    plot_x1: float,
+    baseline_y: float,
+    rule_y: float | None,
+    source: str,
+    source_fill: str,
+    source_size: int,
+    watermark_parts: list[str] | None = None,
+    rule_stroke: str | None = None,
+) -> list[str]:
+    parts = [
+        draw_text(
+            plot_x0,
+            baseline_y,
+            source,
+            klass="geist",
+            size=source_size,
+            weight=500,
+            fill=source_fill,
+        ),
+    ]
+    if rule_y is not None and rule_stroke:
+        parts.insert(
+            0,
+            f'<line x1="{plot_x0:.2f}" y1="{rule_y:.2f}" x2="{plot_x1:.2f}" y2="{rule_y:.2f}" stroke="{rule_stroke}" stroke-width="1.0"/>',
+        )
+    if watermark_parts:
+        parts.extend(watermark_parts)
+    return parts
+
+
 def render_legend(
     *,
     width: float,
@@ -200,44 +237,42 @@ def render_legend(
 
 def render_watermark(
     *,
-    width: float,
-    top: float,
+    right_edge: float,
+    baseline_y: float,
     watermark_tokens: dict,
     fill: str,
-    icon_path: str,
+    watermark_asset: dict,
 ) -> list[str]:
     if watermark_tokens.get("anchor_mode") == "icon_right_edge":
-        wm_x = width - watermark_tokens["margin_right_px"] - watermark_tokens["icon_right_edge_px"]
+        wm_x = right_edge - watermark_tokens["icon_right_edge_px"]
     else:
-        wm_x = width - watermark_tokens["margin_right_px"] - watermark_tokens["width_px"]
-    wm_y = top + watermark_tokens["margin_top_px"]
-    prefix_text = watermark_tokens.get("prefix_text", "Powered by")
-    wordmark_text = watermark_tokens.get("wordmark_text", "Boltbird")
+        wm_x = right_edge - watermark_tokens["width_px"]
+    wm_y = baseline_y - watermark_tokens["baseline_y_px"]
     return [
         f'<g transform="translate({wm_x},{wm_y})" opacity="{watermark_tokens["opacity"]}">',
-        draw_text(
-            watermark_tokens["prefix_offset_x_px"],
-            watermark_tokens["baseline_y_px"],
-            prefix_text,
-            klass="geist",
-            size=watermark_tokens["prefix_font_size_px"],
-            weight=600,
-            fill=fill,
-        ),
-        draw_text(
-            watermark_tokens["wordmark_offset_x_px"],
-            watermark_tokens["baseline_y_px"],
-            wordmark_text,
-            klass="serifword",
-            size=watermark_tokens["wordmark_font_size_px"],
-            weight=700,
-            fill=fill,
-        ),
-        f'<g transform="translate({watermark_tokens["icon_offset_x_px"]},{watermark_tokens["icon_offset_y_px"]}) '
-        f'scale({watermark_tokens["icon_scale"]})" fill="{fill}">',
-        f"<path d=\"{icon_path}\"/>",
+        f'<g color="{fill}" fill="{fill}">',
+        watermark_asset["content"],
         "</g></g>",
     ]
+
+
+def load_svg_asset(svg_path: Path) -> dict:
+    text = svg_path.read_text(encoding="utf-8")
+    root = ET.fromstring(text)
+    view_box = root.get("viewBox")
+    if view_box:
+        _, _, width, height = (float(part) for part in view_box.split())
+    else:
+        width = float(root.get("width", "0"))
+        height = float(root.get("height", "0"))
+    content = "".join(ET.tostring(child, encoding="unicode") for child in list(root))
+    content = re.sub(r"\s+xmlns(:\w+)?=\"[^\"]+\"", "", content)
+    content = re.sub(r"(<\/?)ns\d+:", r"\1", content)
+    return {
+        "width": width,
+        "height": height,
+        "content": content,
+    }
 
 
 def load_single_path_d(svg_path: Path) -> str:

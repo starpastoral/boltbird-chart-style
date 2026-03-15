@@ -39,10 +39,16 @@ Optional:
 - default palette logic: `one accent + neutral ladder`
 - canonical source artifact: `SVG`
 - default user-facing preview artifact: `PNG`
+- default chart copy language: `English`
 - default font stacks:
   - primary: `Geist`, fallback to `Helvetica Neue`, `Arial`, `sans-serif`
-  - monospace: `Google Sans Code`, fallback to `SFMono-Regular`, `Menlo`, `monospace`
+  - monospace: `Google Sans Code`, fallback to `Geist Mono`, `SFMono-Regular`, `Menlo`, `monospace`
   - wordmark: `Source Serif 4`, fallback to `Times New Roman`, `serif`
+- runtime font rule:
+  - resolve fonts before rendering
+  - for SVG, emit a style block from `font_runtime.build_svg_style_block(...)` so the chart does not depend on backend font discovery
+  - unless the user explicitly asks otherwise, keep all chart text English-only
+  - watermark is special: place the canonical SVG asset as one lockup object instead of reconstructing it from live text
 
 ## Delivery Rule
 
@@ -60,6 +66,19 @@ Preferred export command:
 python3 /path/to/boltbird-chart-style/scripts/export_preview_png.py /path/to/chart.svg
 ```
 
+Recommended preflight:
+
+```bash
+python3 /path/to/boltbird-chart-style/scripts/check_fonts.py
+```
+
+Candlestick gate:
+
+```bash
+python3 /path/to/boltbird-chart-style/examples/candlestick_canonical_svg.py --output /path/to/chart.svg
+python3 /path/to/boltbird-chart-style/scripts/chart_qa.py /path/to/chart.svg
+```
+
 ## Runtime Entry Point
 
 ```python
@@ -69,6 +88,7 @@ import sys
 SKILL_DIR = Path("/path/to/boltbird-chart-style")
 sys.path.insert(0, str(SKILL_DIR / "scripts"))
 
+from font_runtime import build_svg_style_block
 from runtime import chart_plan, load_runtime, series_palette
 
 rt = load_runtime(SKILL_DIR, requested_mode=None)
@@ -87,12 +107,16 @@ colors = series_palette(
     tokens=tokens,
     requested_mode=mode,
 )
+style_block = build_svg_style_block(rt["font_plan"])
 ```
 
 Interpretation:
 
 - `chart_plan(...)` decides whether the requested form should change under `consulting_safe`
 - `series_palette(...)` returns a default palette for the final form
+- `build_svg_style_block(...)` makes the SVG self-describing instead of trusting system font lookup
+- `chart_qa.py` is not optional for candlesticks; first-pass delivery should fail closed when QA reports candle merging, axis drift, label collision, or watermark intrusion
+- source line and watermark should be emitted in the metadata footer row, not as floating plot overlays
 
 ## Non-SVG Mapping Cheat Sheet
 
@@ -102,6 +126,8 @@ If the target stack is not SVG:
   - map `ink_*` to title, axis, tick, and grid colors
   - map `primary_accent` and neutral ladder to series colors
   - keep figure and axes facecolor transparent
+  - use Matplotlib for marks and axes only when necessary; final typography and watermarking should still be emitted with explicit font control
+  - use [`../scripts/matplotlib_bridge.py`](../scripts/matplotlib_bridge.py) to export a plot-only SVG fragment and compose it into the final Boltbird shell
 - Plotly:
   - map fonts from `typography`
   - set `paper_bgcolor` and `plot_bgcolor` to transparent
